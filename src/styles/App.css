@@ -66,10 +66,10 @@ html, body, #root {
   }
 }
 
-/* Sidebar */
+/* Sidebar - commented out as not needed now
 .sidebar {
   width: 280px;
-  min-width: 280px; /* Ensure consistent width */
+  min-width: 280px;
   background-color: var(--surface);
   border-right: 1px solid var(--border);
   display: flex;
@@ -87,6 +87,7 @@ html, body, #root {
 .sidebar:not(.visible) {
   transform: translateX(-100%);
 }
+*/
 
 .sidebar-header {
   padding: 16px;

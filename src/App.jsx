@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import Sidebar from './components/Sidebar/Sidebar';
+// import Sidebar from './components/Sidebar/Sidebar'; // Sidebar not needed now
 import Main from './components/Main/Main';
 import './styles/App.css';
 
 function App() {
-  const [isSidebarVisible, setIsSidebarVisible] = useState(window.innerWidth > 768);
+  // Sidebar visibility state - commented out as sidebar not needed now
+  // const [isSidebarVisible, setIsSidebarVisible] = useState(window.innerWidth > 768);
 
+  // Commenting out resize handler as sidebar is not needed
+  /*
   useEffect(() => {
     const handleResize = () => {
       setIsSidebarVisible(window.innerWidth > 768);
@@ -18,18 +21,17 @@ function App() {
   const toggleSidebar = () => {
     setIsSidebarVisible(!isSidebarVisible);
   };
+  */
 
-  // Update CSS variable for input container positioning
+  // Set sidebar margin to 0 since we're not using sidebar
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      '--sidebar-margin', 
-      isSidebarVisible && window.innerWidth > 768 ? '300px' : '0px'
-    );
-  }, [isSidebarVisible]);
+    document.documentElement.style.setProperty('--sidebar-margin', '0px');
+  }, []);
 
   return (
-    <div className={`app ${isSidebarVisible ? 'sidebar-visible' : ''}`}>
-      <Sidebar isVisible={isSidebarVisible} onToggle={toggleSidebar} />
+    <div className="app">
+      {/* Sidebar removed as not needed now */}
+      {/* <Sidebar isVisible={isSidebarVisible} onToggle={toggleSidebar} /> */}
       <Main />
     </div>
   );

@@ -1,14 +1,16 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import './Main.css';
+import './MessageStyles.css';  // Import message styling
 import { ChatContext } from '../../context/Context';
 import { useTheme } from '../../context/ThemeContext';
 import { 
   FaUser, FaRobot, FaCompass, FaLightbulb, FaCode, 
   FaHandsHelping, FaPaperPlane, FaMicrophone, FaImage,
-  FaTimes, FaSun, FaMoon, FaRocket, FaVolumeMute, FaVolumeUp,
+  FaTimes, FaClock, FaCheck, FaRocket, FaVolumeMute,
   FaBookmark, FaChartBar, FaDatabase, FaMagic
 } from 'react-icons/fa';
 import ThemeToggle from '../ThemeToggle';
+import VoiceModal from './VoiceModal';
 
 const Main = () => {
   const { 
@@ -244,14 +246,16 @@ const Main = () => {
             </div>
           </div>
         ) : (
-          <>
-            <div className="message user">
+          <>            <div className="message user">
               <div className="message-avatar">
                 <FaUser />
               </div>
               <div className="message-content">
                 <div className="message-bubble">{recentPrompt}</div>
-                <div className="message-info">{formatTimestamp()}</div>
+                <div className="message-info">
+                  <FaClock size={10} />
+                  {formatTimestamp()}
+                </div>
               </div>
             </div>
             
@@ -262,13 +266,16 @@ const Main = () => {
                 <span></span>
               </div>
             ) : (
-              <div className="message">
+              <div className="message assistant">
                 <div className="message-avatar">
                   <FaRobot />
                 </div>
                 <div className="message-content">
                   <div className="message-bubble" dangerouslySetInnerHTML={{ __html: resultData }}></div>
-                  <div className="message-info">{formatTimestamp()}</div>
+                  <div className="message-info">
+                    <FaCheck size={10} />
+                    {formatTimestamp()}
+                  </div>
                 </div>
               </div>
             )}
