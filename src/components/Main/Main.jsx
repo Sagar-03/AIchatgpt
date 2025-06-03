@@ -1,188 +1,349 @@
-import React, { useContext, useEffect, useState } from "react";
-import "./Main.css";
-import { FaUser, FaCompass, FaLightbulb, FaHandsHelping, FaCode, FaPaperPlane, FaImages, FaMicrophone } from "react-icons/fa";
-import { Context } from "../../context/Context";
+import React, { useContext, useState, useEffect, useRef } from 'react';
+import './Main.css';
+import { ChatContext } from '../../context/Context';
+import { useTheme } from '../../context/ThemeContext';
+import { 
+  FaUser, FaRobot, FaCompass, FaLightbulb, FaCode, 
+  FaHandsHelping, FaPaperPlane, FaMicrophone, FaImage,
+  FaTimes, FaSun, FaMoon, FaRocket, FaVolumeMute, FaVolumeUp,
+  FaBookmark, FaChartBar, FaDatabase, FaMagic
+} from 'react-icons/fa';
+import ThemeToggle from '../ThemeToggle';
 
 const Main = () => {
-    const { onSent, recentPrompt, showResult, loading, resultData, setInput, input } = useContext(Context);
-    const [recognition, setRecognition] = useState(null);
-    const [listening, setListening] = useState(false);
+  const { 
+    onSent, 
+    recentPrompt, 
+    showResult, 
+    loading, 
+    resultData, 
+    setInput, 
+    input,
+    prevPrompts
+  } = useContext(ChatContext);
+  
+  const [listening, setListening] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(true);
+  const [transcript, setTranscript] = useState("");
+  const [showVoiceModal, setShowVoiceModal] = useState(false);
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+  
+  // Enhanced suggestions with additional options
+  const suggestions = [
+    { 
+      text: "Suggest beautiful places to see on an upcoming road trip", 
+      icon: <FaCompass />,
+      category: "Travel"
+    },
+    { 
+      text: "Briefly summarize this concept: urban planning", 
+      icon: <FaLightbulb />,
+      category: "Knowledge"
+    },
+    { 
+      text: "Brainstorm team bonding activities for our work retreat", 
+      icon: <FaHandsHelping />,
+      category: "Work"
+    },
+    { 
+      text: "Improve the readability of my JavaScript code", 
+      icon: <FaCode />,
+      category: "Coding"
+    },
+    { 
+      text: "Create an effective data visualization strategy", 
+      icon: <FaChartBar />,
+      category: "Analytics"
+    },
+    { 
+      text: "Design a reading list for someone interested in AI", 
+      icon: <FaBookmark />,
+      category: "Learning"
+    },
+    { 
+      text: "What are best practices for database optimization?", 
+      icon: <FaDatabase />,
+      category: "Technical"
+    },
+    { 
+      text: "Generate creative names for a new tech startup", 
+      icon: <FaMagic />,
+      category: "Creativity"
+    }
+  ];
 
-    useEffect(() => {
-        // Initialize speech recognition on component mount
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            const recognitionInstance = new SpeechRecognition();
-            recognitionInstance.continuous = true;
-            recognitionInstance.onresult = (event) => {
-                const transcript = event.results[event.resultIndex][0].transcript;
-                setInput(transcript); // Set the recognized speech into the search box
-                takeCommand(transcript.toLowerCase()); // Execute the recognized command
-                onSent(); // Automatically trigger the search after recognizing the speech
-                clearInput(); // Clear the input after the search
-            };
-            setRecognition(recognitionInstance);
-        } else {
-            alert("Sorry, your browser does not support speech recognition.");
-        }
+  useEffect(() => {
+    // Check if SpeechRecognition is supported
+    if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+      setVoiceSupported(false);
+    }
+    
+    // Scroll to bottom when new messages arrive
+    scrollToBottom();
+  }, [resultData, loading]);
 
-        // Greet the user when the page loads
-        speak("Initializing DELTA...");
-        wishMe();
-    }, []);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
-    const speak = (text) => {
-        const text_speak = new SpeechSynthesisUtterance(text);
-        text_speak.rate = 1;
-        text_speak.volume = 1;
-        text_speak.pitch = 1;
-        window.speechSynthesis.speak(text_speak);
+  const handleSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (input.trim()) {
+      onSent();
+      setInput('');
+    }
+  };
+
+  const handleSuggestClick = (suggestion) => {
+    setInput(suggestion);
+    onSent(suggestion);
+  };
+
+  const handleMicrophoneToggle = () => {
+    if (!voiceSupported) {
+      alert('Speech recognition is not supported in your browser.');
+      return;
+    }
+
+    // If already listening, stop it
+    if (listening) {
+      stopListening();
+      return;
+    }
+    
+    // Start voice modal
+    setShowVoiceModal(true);
+    startListening();
+  };
+
+  const startListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      setVoiceSupported(false);
+      return;
+    }
+    
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    
+    recognition.onstart = () => {
+      setListening(true);
+      setTranscript("");
     };
-
-    const wishMe = () => {
-        const day = new Date();
-        const hour = day.getHours();
-        if (hour >= 0 && hour < 12) {
-            speak("Good Morning ..");
-        } else if (hour >= 12 && hour < 17) {
-            speak("Good Afternoon ...");
-        } else {
-            speak("Good Evening ...");
-        }
+    
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map(result => result[0].transcript)
+        .join('');
+      
+      setTranscript(transcript);
     };
-
-    const handleMicrophoneClick = () => {
-        if (recognition) {
-            if (listening) {
-                recognition.stop();
-                setListening(false);
-            } else {
-                setListening(true);
-                recognition.start();
-            }
-        }
+    
+    recognition.onend = () => {
+      stopListening();
     };
-
-    const takeCommand = (message) => {
-        console.log("Received message:", message); // Log the received message
-
-        let finalText = "";
-        if (message.includes('hi') || message.includes('hello')) {
-            finalText = "Hello Sir, How May I Help You?";
-        } else if (message.includes("open google")) {
-            window.open("https://google.com", "_blank");
-            finalText = "Opening Google...";
-        } else if (message.includes("open youtube")) {
-            window.open("https://youtube.com", "_blank");
-            finalText = "Opening Youtube...";
-        } else if (message.includes("open facebook")) {
-            window.open("https://facebook.com", "_blank");
-            finalText = "Opening Facebook...";
-        } else if (message.includes("open instagram")) {
-            window.open("https://instagram.com", "_blank");
-            finalText = "Opening Instagram...";
-        } else if (message.includes("open my git hub") || message.includes('open git hub') || message.includes('open get hub')) {
-            window.open("https://github.com", "_blank");
-            finalText = "Opening Your GitHub...";
-        } else if (message.includes("open my linkedin") || message.includes('open linkedin')) {
-            window.open("https://www.linkedin.com", "_blank");
-            finalText = "Opening Your LinkedIn...";
-        } else if (message.includes('what is') || message.includes('who is') || message.includes('what are')) {
-            window.open(`https://www.google.com/search?q=${message.replace(" ", "+")}`, "_blank");
-            finalText = "This is what I found on the internet regarding " + message;
-        } else if (message.includes('wikipedia')) {
-            window.open(`https://en.wikipedia.org/wiki/${message.replace("wikipedia", "").trim()}`, "_blank");
-            finalText = "This is what I found on Wikipedia regarding " + message;
-        } else if (message.includes('time')) {
-            const time = new Date().toLocaleString(undefined, { hour: "numeric", minute: "numeric" });
-            finalText = "The current time is " + time;
-        } else if (message.includes('date')) {
-            const date = new Date().toLocaleString(undefined, { month: "short", day: "numeric" });
-            finalText = "Today's date is " + date;
-        } else if (message.includes('calculator')) {
-            window.open('Calculator:///');
-            finalText = "Opening Calculator";
-        } else {
-            window.open(`https://www.google.com/search?q=${message.replace(" ", "+")}`, "_blank");
-            finalText = "I found some information for " + message + " on Google";
-        }
-
-        speak(finalText);
-        setInput(message); // Set the input value for display
-        setResultData(finalText); // Ensure resultData is set
+    
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error', event.error);
+      stopListening();
     };
+    
+    try {
+      recognition.start();
+      window.speechRecognition = recognition;
+    } catch (err) {
+      console.error('Speech recognition error', err);
+      stopListening();
+    }
+  };
 
-    const clearInput = () => {
-        setInput(""); // Clear the input field
-    };
+  const stopListening = () => {
+    if (window.speechRecognition) {
+      window.speechRecognition.stop();
+    }
+    setListening(false);
+    // Keep modal open if we have transcript
+  };
 
-    return (
-        <div className="main">
-            <div className="nav">
-                <p>Welcome</p>
-                <FaUser size={35} />
-            </div>
-            <div className="main-container">
-                {!showResult
-                    ? <>
-                        <div className="greet">
-                            <p><span>Welcome!!.</span></p>
-                            <p>How Can I Help You today?</p>
-                        </div>
-                        <div className="cards">
-                            <div className="card">
-                                <p>Suggest beautiful place to see on an upcoming road trip</p>
-                                <FaCompass size={25} />
-                            </div>
-                            <div className="card">
-                                <p>Briefly summarize this concept: urban planning</p>
-                                <FaLightbulb size={25} />
-                            </div>
-                            <div className="card">
-                                <p>Brainstorm team bonding activities for our work retreat</p>
-                                <FaHandsHelping size={25} />
-                            </div>
-                            <div className="card">
-                                <p>Improve the readability of the following code</p>
-                                <FaCode size={25} />
-                            </div>
-                        </div>
-                    </>
-                    : <div className="result">
-                        <div className="result-title">
-                            <FaUser size={35} />
-                            <p>{recentPrompt}</p>
-                        </div>
-                        <div className="result-data">
-                            <FaUser size={35} />
-                            {loading ?
-                                <div className="loader">
-                                    <hr />
-                                    <hr />
-                                    <hr />
-                                </div>
-                                : <p dangerouslySetInnerHTML={{ __html: resultData }}></p>
-                            }
-                        </div>
-                    </div>
-                }
+  const handleVoiceSubmit = () => {
+    if (transcript.trim()) {
+      setInput(transcript);
+      setShowVoiceModal(false);
+      stopListening();
+      
+      // Small delay to ensure input is set before submission
+      setTimeout(() => {
+        onSent(transcript);
+      }, 100);
+    }
+  };
 
-                <div className="main-bottom">
-                    <div className="search-box">
-                        <input onChange={(e) => setInput(e.target.value)} value={input} type="text" placeholder="Enter a prompt here" />
-                        <div>
-                            <FaImages size={22} />
-                            <FaMicrophone size={22} onClick={handleMicrophoneClick} style={{ color: listening ? 'red' : 'black' }} /> {/* Toggle microphone color when active */}
-                            {input ? <FaPaperPlane size={22} onClick={() => { onSent(); clearInput(); }} /> : null}
-                        </div>
-                    </div>
-                    <p className="bottom-info">
-                        Gemini may display your message to improve its responses, so double-check its responses. Your privacy and Gemini Apps.
-                    </p>
-                </div>
-            </div>
+  const cancelVoiceInput = () => {
+    stopListening();
+    setShowVoiceModal(false);
+    setTranscript("");
+  };
+
+  const formatTimestamp = () => {
+    const now = new Date();
+    return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
+  return (
+    <div className="chat-area">
+      <div className="chat-header">
+        <div className="chat-header-title">
+          <FaRocket color="#7C4DFF" />
+          <h2>{prevPrompts.length > 0 ? 'AI Assistant' : 'Welcome to AI Assistant'}</h2>
         </div>
-    );
+        <div className="chat-header-actions">
+          <ThemeToggle />
+          <div className="user-profile">
+            <div className="user-avatar">U</div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="messages-container">
+        {!showResult ? (
+          <div className="welcome-container">
+            <div className="welcome-content">
+              <div className="welcome-header">
+                <div className="welcome-icon">
+                  <FaRobot />
+                </div>
+                <h1 className="welcome-title">How can I assist you today?</h1>
+                <p className="welcome-subtitle">Ask me anything or try one of these suggestions</p>
+              </div>
+              
+              <div className="suggestions-grid">
+                {suggestions.map((suggestion, index) => (
+                  <div 
+                    key={index} 
+                    className="suggestion-card"
+                    onClick={() => handleSuggestClick(suggestion.text)}
+                  >
+                    <div className="card-category">{suggestion.category}</div>
+                    <div className="card-text">{suggestion.text}</div>
+                    <div className="card-icon">
+                      {suggestion.icon}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="message user">
+              <div className="message-avatar">
+                <FaUser />
+              </div>
+              <div className="message-content">
+                <div className="message-bubble">{recentPrompt}</div>
+                <div className="message-info">{formatTimestamp()}</div>
+              </div>
+            </div>
+            
+            {loading ? (
+              <div className="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            ) : (
+              <div className="message">
+                <div className="message-avatar">
+                  <FaRobot />
+                </div>
+                <div className="message-content">
+                  <div className="message-bubble" dangerouslySetInnerHTML={{ __html: resultData }}></div>
+                  <div className="message-info">{formatTimestamp()}</div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </>
+        )}
+      </div>
+      
+      <div className="input-container">
+        <form onSubmit={handleSubmit} className="input-box">
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder={listening ? 'Listening...' : 'Ask anything...'}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={listening}
+          />
+          <div className="input-actions">
+            <div className="input-action-btn">
+              <FaImage size={18} />
+            </div>
+            <div 
+              className={`input-action-btn ${listening ? 'active' : ''}`}
+              onClick={handleMicrophoneToggle}
+            >
+              {listening ? <FaTimes size={18} /> : <FaMicrophone size={18} />}
+            </div>
+            {input.trim() && (
+              <div className="input-action-btn send" onClick={handleSubmit}>
+                <FaPaperPlane size={16} />
+              </div>
+            )}
+          </div>
+        </form>
+        <p className="footer-info">
+          AI Assistant may display inaccurate or offensive information that doesn't represent Google's views.
+        </p>
+      </div>
+
+      {/* Voice Input Modal */}
+      {showVoiceModal && (
+        <div className="voice-modal-overlay" onClick={cancelVoiceInput}>
+          <div className="voice-modal" onClick={(e) => e.stopPropagation()}>
+            <div className={`voice-modal-icon ${listening ? 'listening' : ''}`}>
+              {listening ? <FaMicrophone /> : <FaVolumeMute />}
+              <div className="voice-ripples"></div>
+            </div>
+            
+            <h3 className="voice-modal-title">
+              {listening ? 'Listening...' : 'Voice input'}
+            </h3>
+            
+            <div className="voice-modal-transcript">
+              {transcript || 'Speak now...'}
+            </div>
+            
+            <div className="voice-modal-actions">
+              <button className="voice-modal-cancel" onClick={cancelVoiceInput}>
+                Cancel
+              </button>
+              <button 
+                className="voice-modal-submit"
+                onClick={handleVoiceSubmit}
+                disabled={!transcript.trim()}
+              >
+                Submit <FaPaperPlane size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default Main;

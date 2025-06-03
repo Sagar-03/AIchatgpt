@@ -1,0 +1,114 @@
+/* Layout Styling */
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: var(--sidebar-width); /* Use variable for consistency */
+  transition: margin-left var(--transition-normal);
+  padding: var(--space-xl) var(--space-lg);
+  width: calc(100% - var(--sidebar-width)); /* Calculate proper width */
+  overflow-x: hidden;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Add a container for content */
+.content-container {
+  max-width: 900px; /* Limit width for readability */
+  width: 100%;
+  margin: 0 auto;
+  padding-bottom: var(--space-xl);
+}
+
+/* Chat area specific styles */
+.chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Empty state - when no conversation is selected */
+.empty-main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 70vh;
+  max-width: 600px;
+  margin: 0 auto;
+  color: var(--text-secondary);
+  padding: var(--space-xl) var(--space-lg);
+}
+
+.empty-main-content h2 {
+  margin-bottom: var(--space-lg);
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 2.5rem;
+  font-weight: var(--font-bold);
+  line-height: 1.2;
+}
+
+.empty-main-content p {
+  margin-bottom: var(--space-xl);
+  font-size: 1.1rem;
+  max-width: 400px;
+}
+
+.empty-main-content .suggestion-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-lg);
+  width: 100%;
+  margin-top: var(--space-xl);
+}
+
+.suggestion-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-normal);
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+
+.suggestion-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-light);
+}
+
+.suggestion-card h3 {
+  color: var(--primary);
+  margin-bottom: var(--space-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+    padding: calc(var(--header-height) + var(--space-md)) var(--space-md) var(--space-md);
+  }
+  
+  .suggestion-grid {
+    grid-template-columns: 1fr;
+  }
+}

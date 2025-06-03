@@ -17,24 +17,20 @@ import code_icon from './code_icon.png';
 import send_icon from './send_icon.jpeg';
 import gemini_icon from './gemini_icon.png';
 
-
-
 export const assets = {
-history_icon,
-menu_icon,  
-plus_icon,
-question_icon,
-setting_icon,
-bulb_icon,
-compass_icon,   
-gallery_icon,
-mic_icon,
-user_icon,  
-youtube_icon,
-massage_icon,
-code_icon,
-send_icon,
-gemini_icon,
-
-
+  history_icon,
+  menu_icon,  
+  plus_icon,
+  question_icon,
+  setting_icon,
+  bulb_icon,
+  compass_icon,   
+  gallery_icon,
+  mic_icon,
+  user_icon,  
+  youtube_icon,
+  massage_icon,
+  code_icon,
+  send_icon,
+  gemini_icon,
 }

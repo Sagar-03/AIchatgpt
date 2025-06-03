@@ -1,59 +1,158 @@
-import React, { useContext, useState } from 'react'
-import './Sidebar.css'
-import {assets} from '../../assets/assets'
-import { Context } from '../../context/Context';
+import React, { useContext, useState, useEffect } from 'react';
+import './Sidebar.css';
+import { ChatContext } from '../../context/Context';
+import ThemeToggle from '../ThemeToggle';
+import { 
+  FaPlus, FaHistory, FaTrash, FaCommentAlt, 
+  FaCog, FaBars, FaTimes, FaRocket
+} from 'react-icons/fa';
 
-const Sidebar = () => {
+const Sidebar = ({ isVisible = true, onToggle }) => {
+  const { onSent, prevPrompts, setRecentPrompt, newChat } = useContext(ChatContext);
+  const [showConfirmClear, setShowConfirmClear] = useState(false);
+  
+  const toggleSidebar = () => {
+    onToggle();
+  };
+  
+  const loadPrompt = (prompt) => {
+    setRecentPrompt(prompt);
+    onSent(prompt);
+    if (window.innerWidth <= 768) {
+      toggleSidebar();
+    }
+  };
+  
+  const handleNewChat = () => {
+    newChat();
+    if (window.innerWidth <= 768) {
+      toggleSidebar();
+    }
+  };
+  
+  const handleClearAll = () => {
+    if (showConfirmClear) {
+      // Clear all chats logic
+      localStorage.removeItem("prevPrompts");
+      window.location.reload();
+      setShowConfirmClear(false);
+    } else {
+      setShowConfirmClear(true);
+    }
+  };
+  
+  // Format time for display
+  const formatDate = () => {
+    const now = new Date();
+    return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
-   const[extended, setExtended] =useState (false)
-   const {onSent, prevPrompts, setRecentPrompt,newChat} = useContext (Context)
-        
-   const loadPrompt = async (prompt) =>{
-    setRecentPrompt(prompt)  
-    await onSent(prompt)
-   }
+  // Update body class to prevent scrolling when sidebar is open on mobile
+  useEffect(() => {
+    if (window.innerWidth <= 768 && isVisible) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isVisible]);
 
   return (
-    <div className="sidebar">
-      <div className="top">
-        <img onClick={()=>setExtended (prev=>!prev)} className="menu" src={assets.menu_icon} alt="" />
-        <div onClick={()=> newChat()} className="new-chat">
-          <img src={assets.plus_icon} alt="" />
-          {extended?<p>New Chat</p>:null}
+    <>
+      {/* Mobile toggle button */}
+      <button 
+        className="toggle-sidebar"
+        onClick={onToggle}
+        aria-label={isVisible ? 'Close sidebar' : 'Open sidebar'}
+      >
+        {isVisible ? <FaTimes /> : <FaBars />}
+      </button>
+      
+      {/* Sidebar */}
+      <div className={`sidebar ${isVisible ? 'visible' : ''}`}>
+        <div className="sidebar-header">
+          <div className="logo">
+            <FaRocket size={24} color="#7C4DFF" />
+            <span className="logo-text">Gemini AI Chat</span>
+          </div>
+          <div className="menu-toggle" onClick={toggleSidebar}>
+            <FaTimes />
+          </div>
         </div>
-        {extended?
-        <div className="recent">
-          <p className="recent-title">Recent</p>
-          {prevPrompts.map ((item,index) =>{
-           
-           return (
-             <div onClick={()=> loadPrompt(item)} className="recent-entry">
-               <img src={assets.massage_icon} alt="" />
-               <p>{item.slice(0,18)}...</p>
-             </div>
-           );
-          })}
-         
+        
+        <div className="sidebar-content">
+          <div className="new-chat" onClick={handleNewChat}>
+            <div className="new-chat-icon">
+              <FaPlus size={16} />
+            </div>
+            <span className="new-chat-text">New Chat</span>
+          </div>
+          
+          {prevPrompts.length > 0 && (
+            <div className="sidebar-section">
+              <h3 className="section-title">
+                <FaHistory size={14} style={{ marginRight: '8px' }} />
+                Recent Chats
+              </h3>
+              <div className="recent-chats">
+                {prevPrompts.map((item, index) => (
+                  <div 
+                    key={index}
+                    className="conversation-item" 
+                    onClick={() => loadPrompt(item)}
+                  >
+                    <div className="conversation-icon">
+                      <FaCommentAlt size={14} />
+                    </div>
+                    <div className="conversation-details">
+                      <div className="conversation-title">
+                        {item.length > 25 ? item.slice(0, 25) + '...' : item}
+                      </div>
+                      <div className="conversation-date">
+                        {formatDate()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-       :null
-      }
+        
+        <div className="sidebar-footer">
+          {showConfirmClear ? (
+            <div className="confirm-clear">
+              <p>Are you sure you want to clear all chats?</p>
+              <div className="confirm-actions">
+                <button onClick={handleClearAll} className="confirm-yes">Yes, clear all</button>
+                <button onClick={() => setShowConfirmClear(false)} className="confirm-no">Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <button className="clear-all-btn" onClick={handleClearAll}>
+                <FaTrash size={14} style={{ marginRight: '8px' }} /> Clear All Chats
+              </button>
+              
+              <div className="settings-container">
+                <div className="settings-btn">
+                  <FaCog size={14} style={{ marginRight: '8px' }} /> Settings
+                </div>
+                <ThemeToggle />
+              </div>
+            </>
+          )}
+        </div>
       </div>
-      <div className="bottom">
-        <div className="bottom-item recent-entry">
-          <img src={assets.question_icon} alt="" />
-         {extended? <p>Help</p>:null}
-        </div>
-        <div className="bottom-item recent-entry">
-          <img src={assets.history_icon} alt="" />
-          {extended?<p>Activity</p>:null}
-        </div>
-        <div className="bottom-item recent-entry">
-          <img src={assets.setting_icon} alt="" />
-         {extended? <p>Settings</p>:null}
-        </div>
-      </div>
-    </div>
+      
+      {/* Overlay for mobile */}
+      {isVisible && window.innerWidth <= 768 && (
+        <div className="sidebar-overlay" onClick={onToggle} />
+      )}
+    </>
   );
 };
 
-export default Sidebar
+export default Sidebar;

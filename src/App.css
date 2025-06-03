@@ -1,3 +1,54 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --background: #ffffff;
+  --surface: #f5f5f5;
+  --surface-secondary: #e0e0e0;
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --primary: #1a73e8;
+  --primary-dark: #1967d2;
+  --primary-light: #4285f4;
+  --secondary: #34a853;
+  --dark-background: #202124;
+  --dark-surface: #292a2d;
+  --dark-surface-secondary: #3c4043;
+  --dark-text-primary: #e8eaed;
+  --dark-text-secondary: #9aa0a6;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+body {
+  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  background-color: var(--background);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Main content positioning to account for sidebar */
+main {
+  flex: 1;
+  margin-left: 260px;
+  transition: margin-left 0.3s ease;
+}
+
+/* For mobile view */
+@media (max-width: 768px) {
+  main {
+    margin-left: 0;
+    padding-top: 60px; /* Space for mobile toggle button */
+  }
+}
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -39,4 +90,67 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* App-wide Layout Fix */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  background: var(--background);
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 280px;
+  min-width: 220px;
+  max-width: 320px;
+  height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: left 0.3s cubic-bezier(.4,0,.2,1);
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100vh;
+  background: var(--background);
+  overflow: hidden;
+  position: relative;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: 220px;
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-layout {
+    flex-direction: column;
+  }
+  .sidebar {
+    position: fixed;
+    left: -100vw;
+    top: 0;
+    height: 100vh;
+    z-index: 200;
+    transition: left 0.3s cubic-bezier(.4,0,.2,1);
+  }
+  .sidebar.visible {
+    left: 0;
+    box-shadow: 0 0 0 100vw rgba(0,0,0,0.3);
+  }
+  .main {
+    min-width: 0;
+    width: 100vw;
+    margin-left: 0;
+  }
 }

@@ -1,0 +1,37 @@
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background-color: transparent;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, transform 0.2s;
+}
+
+.theme-toggle:hover {
+  background-color: var(--hover-bg);
+  color: var(--primary);
+  transform: rotate(15deg);
+}
+
+/* Icon spin on theme change */
+.theme-toggle svg {
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle:active svg {
+  transform: rotate(360deg);
+}
+
+/* Dark mode specific styles */
+.dark-mode .theme-toggle {
+  color: var(--text-secondary);
+}
+
+.dark-mode .theme-toggle:hover {
+  color: var(--primary-light);
+}
